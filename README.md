@@ -1,3 +1,6 @@
+[依赖安装教程](https://blog.csdn.net/qq_37147123/article/details/134594775)
+
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
