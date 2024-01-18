@@ -1,108 +1,161 @@
-import { View, Image, Text, StyleSheet, Pressable, ScrollView } from "react-native"
+import { View, Image, Text, Modal, TextInput, StyleSheet, Pressable, ScrollView } from "react-native"
 import tw from 'twrnc';
 import { Col, Row, Grid } from "react-native-easy-grid";
 import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react'
+import ImageViewer from 'react-native-image-zoom-viewer';
+import api from './api'
+import dateFormat from "../../utils/dateFormat";
 
+const Comment = ({ comment, navigation }) => {
+    const [user, setUser] = useState({ id: comment.userId });
+    useEffect(() => {
+        api.getUser(comment.userId).then(res => {
+            const user = res.user;
+            setUser(user);
+        })
+    }, [])
+    return (
+        <View style={tw`flex-row pl-2 pr-2 pt-2 gap-1 w-full`}>
+            <Pressable style={tw`w-14 h-14`} onPress={() => { navigation.navigate('Profile', { userId: user.id }) }}>
+                {user.avatar && <Image style={tw`w-full h-full rounded-full`} source={{ uri: user.avatar }}></Image>}
+            </Pressable>
+            <View style={tw`flex-1 border-b-2 border-b-[#f7f7f7] justify-around`}>
+                <View style={tw`flex-row`}>
+                    <Text style={tw`text-lg text-yellow-600`}>{user.username}</Text>
+                    <Text style={tw`ml-auto text-lg`}>{dateFormat(comment.createTime)}</Text>
+                </View>
+                <View><Text style={tw`text-lg`}>{comment.text}</Text></View>
+            </View>
+        </View>
+    )
+}
 
 const PromotionDetail = ({ route }) => {
-    const promotionId = route.id;
-    const [data, setData] = useState({});
+    const { promotionId, merchantId } = route.params;
+    const [merchant, setMerchant] = useState({});
+    const [promotion, setPromotion] = useState({});
+    const [comments, setComments] = useState([]);
+    const [textInputActive, setTextInputActive] = useState(false);
+    const [commentInput, setCommentInput] = useState("")
     const navigation = useNavigation();
+    const [modalImage, _setModalImage] = useState({ img: [], index: [] });
     useEffect(() => {
-        const datum = {
-            merchantName: "微头条",
-            merchantAvatar: "./avatar.jpg",
-            merchantBrief: "我的简介我的简介",
-            merchantId: 1,
-            text: "代发广告7天加满5000人精准12341234123412341234123412341234123412341234客户爆单推广精准被加好友十上意向客户主动加你一键投放快速加人客源在线加你微商必备 + ",
-            images: ["./avatar.jpg", "./avatar.jpg", "./avatar.jpg", "./avatar.jpg"],
-            isTop: true,
-            uv: 11644,
-            createTime: "4分钟前",
-            like: 1444,
-            comments: [
-                { userId: 1, username: "哈哈哈", text: "确实确实", createTime: "2023-12-11 20:50" },
-                { userId: 1, username: "哈哈哈", text: "确实确实", createTime: "2023-12-11 20:50" },
-                { userId: 1, username: "哈哈哈", text: "确实确实", createTime: "2023-12-11 20:50" }
-            ]
-        }
-        setData(datum);
+        api.getPromotion(promotionId).then(res => {
+            const promotion = res.promotion;
+            setPromotion(promotion);
+        })
+        api.getUser(merchantId).then(res => {
+            const user = res.user;
+            setMerchant(user);
+        })
+        api.getComments(promotionId).then(res => {
+            const resComments = res.comments;
+            const comments = resComments.map(item => ({
+                id: item.id,
+                createTime: item.create_time,
+                text: item.text,
+                userId: item.user_id,
+            }))
+            setComments(comments)
+        })
     }, []);
+    const setAllModalImage = (index) => {
+        _setModalImage({ img: promotion.imgs.map(img => ({ url: img })), index: index });
+    };
+    const clearModalImage = () => {
+        _setModalImage({ img: [], index: 0 });
+    };
     //左闭右闭
     const range = (start, end) => {
         const res = Array.from({ length: end - start + 1 }, (_, index) => start + index);
         return res;
     }
-    console.log("qwerqwer")
+    const sendComment = async () => {
+        if (commentInput == "") {
+            return;
+        }
+        const text = commentInput;
+        setCommentInput("");
+        setTextInputActive(false);
+        const res = await api.sendComment(text, promotion.id);
+        const comment = {
+            id: res.comment.id,
+            createTime: res.comment.create_time,
+            text: res.comment.text,
+            userId: res.comment.user_id,
+        };
+        setComments([...comments, comment])
+    }
     return (
         <ScrollView>
             <View style={tw`w-full items-center bg-yellow-500 pb-2 pt-2 flex-row`}>
                 <Text style={tw`font-bold text-3xl text-white mx-auto`}>详情</Text>
             </View>
+            <Modal visible={modalImage.img.length != 0}>
+                <ImageViewer index={modalImage.index} imageUrls={modalImage.img} onClick={() => { clearModalImage(); }} />
+            </Modal>
             <View style={tw` flex-1 gap-1 rounded-sm p-1 border-b-[#f7f7f7] border-b-4`}>
                 <View style={tw`flex-row gap-1 bg-white`}>
-                    <Pressable onPress={() => { navigation.navigate('Profile') }}>
-                        <Image style={tw`w-20 h-20 rounded-md`} source={require('./avatar.jpg')}></Image>
+                    <Pressable style={tw`w-20 h-20`} onPress={() => { navigation.navigate('Profile', { userId: merchant.id }) }}>
+                        {merchant.avatar && <Image style={tw`w-full h-full rounded-md`} source={{ uri: merchant.avatar }}></Image>}
                     </Pressable>
                     <View style={tw`justify-around`}>
-                        <Text style={tw`text-lg text-black`}>{data.merchantName}</Text>
-                        <Text style={tw`text-lg`}>{data.merchantBrief}</Text>
-                        <Text style={tw`text-lg`}>{data.createTime}</Text>
+                        <Text style={tw`text-2xl text-black`}>{merchant.username}</Text>
+                        <Text style={tw`text-lg`}>{merchant.brief}</Text>
                     </View>
                 </View>
                 <View style={tw`flex-1 gap-1`}>
-                    {data.isTop && <Text style={tw`text-lg text-white bg-red-500`}>置顶</Text>}
-                    <Text style={tw`text-xl bg-white`}>{data.text}</Text>
-                    <View>
-                        {data.images && data.images.length > 0 && range(0, Math.ceil(data.images.length / 3) - 1).map((_, rowIdx) =>
+                    {promotion.isTop && <Text style={tw`text-lg text-white bg-red-500`}>置顶</Text>}
+                    <Text style={tw`text-xl bg-white p-1`}>{promotion.text}</Text>
+                    <View style={tw` bg-white`}>
+                        {promotion.imgs && promotion.imgs.length > 0 && range(0, Math.ceil(promotion.imgs.length / 3) - 1).map((_, rowIdx) =>
                         (
-                            <View style={tw`w-full flex-row bg-white gap-2`}>
+                            <View key={rowIdx} style={tw`w-full flex-row `}>
                                 <View style={tw`flex-1`}>
-                                    {rowIdx * 3 < data.images.length && <Pressable>
-                                        <Image style={tw`w-full `} source={require('./avatar.jpg')}></Image>
+                                    {rowIdx * 3 < promotion.imgs.length && <Pressable onPress={() => setAllModalImage(rowIdx * 3)}>
+                                        <Image style={tw`w-full aspect-square border border-slate-400`} source={{ uri: promotion.imgs[rowIdx * 3] }}></Image>
                                     </Pressable>}
                                 </View>
                                 <View style={tw`flex-1`}>
-                                    {rowIdx * 3 + 1 < data.images.length && <Pressable>
-                                        <Image style={tw`w-full `} source={require('./avatar.jpg')}></Image>
+                                    {rowIdx * 3 + 1 < promotion.imgs.length && <Pressable onPress={() => setAllModalImage(rowIdx * 3 + 1)}>
+                                        <Image style={tw`w-full aspect-square border border-slate-400`} source={{ uri: promotion.imgs[rowIdx * 3 + 1] }}></Image>
                                     </Pressable>}
                                 </View>
                                 <View style={tw`flex-1`}>
-                                    {rowIdx * 3 + 2 < data.images.length && <Pressable>
-                                        <Image style={tw`w-full `} source={require('./avatar.jpg')}></Image>
+                                    {rowIdx * 3 + 2 < promotion.imgs.length && <Pressable onPress={() => setAllModalImage(rowIdx * 3 + 2)}>
+                                        <Image style={tw`w-full aspect-square border border-slate-400`} source={{ uri: promotion.imgs[rowIdx * 3 + 2] }}></Image>
                                     </Pressable>}
                                 </View>
                             </View>
-                        ))}
+                        )
+                        )}
                     </View>
                     <View style={tw`flex-row bg-white`}>
                         <View>
-                            <Text style={tw`text-lg`}>{data.uv}人浏览,{data.like}人点赞</Text>
-                            <Text style={tw`text-lg`}>发布于{data.createTime}</Text>
+                            <Text style={tw`text-lg`}>{promotion.uv}人浏览,{promotion.like}人点赞</Text>
+                            <Text style={tw`text-lg`}>发布于{promotion.create_time}</Text>
                         </View>
                     </View>
                     <View style={tw`bg-white`}>
                         <View style={tw`flex-row border-b-2 border-b-[#f7f7f7]`}>
                             <Text style={tw`text-2xl text-black`}>全部评论</Text>
-                            <Pressable style={tw`ml-auto`}>
-                                <Text style={tw`text-black text-xl`}>发送评论</Text>
-                            </Pressable>
+                            {!textInputActive && <Pressable onPress={setTextInputActive.bind(null, true)} style={tw`ml-auto`}>
+                                <Text style={tw` text-xl`}>发送评论</Text>
+                            </Pressable>}
+                            {textInputActive && <Pressable onPress={setTextInputActive.bind(null, false)} style={tw`ml-auto`}>
+                                <Text style={tw`text-black text-xl`}>关闭评论</Text>
+                            </Pressable>}
                         </View>
+                        {textInputActive && <View style={tw`flex-row`}>
+                            <TextInput onChangeText={text => setCommentInput(text)} value={commentInput} style={tw`border-l border-b border-t border-black rounded-l-lg min-h-1 flex-1`} multiline={true}></TextInput>
+                            <Pressable onPress={sendComment} style={tw`p-1 justify-center border-t border-r border-b border-black rounded-r-lg`}>
+                                <Text style={tw`text-black`}>发送</Text>
+                            </Pressable>
+                        </View>}
                         <View>
-                            {data.comments == undefined || data.comments.length == 0 ? <Text style={tw`text-center text-xl`}>暂无评论</Text> : data.comments.map((comment, idx) => (
-                                <View key={idx} style={tw`flex-row pl-2 pr-2 pt-2 gap-1 w-full`}>
-                                    <Pressable style={tw`w-14 h-14`} onPress={() => { navigation.navigate('Profile') }}>
-                                        <Image style={tw`w-full h-full rounded-full`} source={require('./avatar.jpg')}></Image>
-                                    </Pressable>
-                                    <View style={tw`flex-1 border-b-2 border-b-[#f7f7f7] justify-around`}>
-                                        <View style={tw`flex-row`}>
-                                            <Text style={tw`text-lg text-yellow-600`}>{comment.username}</Text>
-                                            <Text style={tw`ml-auto text-lg`}>{comment.createTime}</Text>
-                                        </View>
-                                        <View><Text style={tw`text-lg`}>{comment.text}</Text></View>
-                                    </View>
-                                </View>
+                            {comments.length == 0 ? <Text style={tw`text-center text-xl`}>暂无评论</Text> : comments.map((comment, idx) => (
+                                <Comment comment={comment} navigation={navigation} key={idx}></Comment>
                             ))}
                         </View>
                     </View>

@@ -1,8 +1,14 @@
 [依赖安装教程](https://blog.csdn.net/qq_37147123/article/details/134594775)
-
-
+# 打包方法
+```bash
+cd android
+gradlew
+gradlew assembleRelease
+```
+[打包慢的解决办法](https://juejin.cn/post/7263035160622317626)
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+[获得高德地图APIkey的方法](https://blog.csdn.net/qq_42458992/article/details/119754651)
 # Getting Started
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
