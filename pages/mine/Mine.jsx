@@ -6,6 +6,8 @@ import userStore from '../../stores/user'
 import api from './api'
 import localStorage from '../../utils/localStorage'
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { MaleIcon, FemaleIcon } from '../../components/Icons'
+import Loading from "../../components/Loading";
 
 const NavigateButton = ({ text, to, navigation }) => {
     return (
@@ -24,35 +26,44 @@ const EventButton = ({ text, onPress }) => {
 }
 
 const Profile = () => {
-    const [data, setData] = useState({});
     const navigation = useNavigation();
-    const { username, coin, avatar, brief, id, role } = userStore();
+    const { username, avatar, brief, id, role, category, gender, currentLocation } = userStore();
     const setMerchant = userStore(state => state.beMerchant);
     const setAvatar = userStore(state => state.setAvatar);
-    useEffect(() => {
-        const user = {
-            username: username,
-            avatar: avatar,
-            id: id,
-            coin: coin,
-            brief: brief
-        }
-        setData(user);
-    }, []);
+    const [loading, setLoading] = useState(false);
     const beMerchant = async () => {
-        const res = await api.beMerchant();
+        setLoading(true);
+        const [latitude, longitude] = currentLocation;
+        const res = await api.beMerchant(latitude, longitude);
         if (res.success == true) {
-            setMerchant();
+            const tmpCategory = res.data.category;
+            setMerchant(latitude, longitude, tmpCategory);
             const userStr = localStorage.getString("user");
             const user = JSON.parse(userStr);
             user.role = 1;
+            user.location = [latitude, longitude];
+            user.category = category;
             localStorage.set("user", JSON.stringify(user));
+            setLoading(false);
+            Alert.alert(
+                '操作提示',
+                '请前往店铺管理界面修改店铺信息',
+                [
+                    {
+                        text: '跳转至店铺管理', onPress: () => {
+                            navigation.navigate("MerchantManage");
+                        }
+                    },
+                ],
+                { cancelable: false }
+            );
         }
     }
     const handleBeMerchant = () => {
         Alert.alert(
             '操作确认',
-            '成为商家须支付50金币,您确定吗?',
+            // '成为商家须支付50金币,您确定吗?',
+            '您确定要成为商家吗?',
             [
                 { text: '取消', onPress: () => { } },
                 { text: '确认', onPress: beMerchant },
@@ -89,17 +100,24 @@ const Profile = () => {
             { cancelable: false }
         );
     }
+
     return (
         <View style={tw`flex-1 gap-2`}>
+            <Loading visible={loading} />
             <View style={tw`flex-row bg-yellow-500 p-2 gap-2 items-center`}>
                 <Pressable style={tw`h-24 w-24`} onPress={handleChangeAvatar}>
                     <Image style={tw`h-full w-full rounded-full border-white border-4`} source={{ uri: avatar }}></Image>
                 </Pressable>
-
                 <View>
-                    <Text style={tw`text-white font-bold text-2xl`}>{data.username}({role == 0 && "普通用户"}{role == 1 && "商家"}{role == 2 && "管理员"})</Text>
-                    <Text style={tw`text-white font-bold text-2xl`}>ID:{data.id}</Text>
-                    <Text style={tw`text-white font-bold text-2xl`}>金币:{data.coin}</Text>
+                    <Text style={tw`text-white font-bold text-2xl`}>{username}</Text>
+                    <Text style={tw`text-white text-xl `}>{role == 0 && "普通用户"}{role == 1 && `商家-${category}`}{role == 2 && "管理员"}</Text>
+                    <View style={tw`flex-row gap-1`}>
+                        <Text style={tw`text-white font-bold text-xl`}>ID:{id}</Text>
+                        {gender == true ? <FemaleIcon /> : <MaleIcon />}
+                    </View>
+
+                    <Text style={tw`text-white font-bold text-xl`}>简介:{brief}</Text>
+                    {/* <Text style={tw`text-white font-bold text-2xl`}>金币:{data.coin}</Text> */}
                 </View>
                 <Pressable style={tw`ml-auto`} onPress={() => { navigation.navigate('Profile', { userId: id }) }}>
                     <View >
@@ -112,7 +130,7 @@ const Profile = () => {
                 <View style={tw`flex-row items-center`}>
                     {role == 0 && <EventButton text="成为商家" onPress={handleBeMerchant}></EventButton>}
                     {role == 1 && <>
-                        <NavigateButton text="我的推广" to="PromotionManage" navigation={navigation}></NavigateButton>
+                        <NavigateButton text="店铺管理" to="MerchantManage" navigation={navigation}></NavigateButton>
                         <NavigateButton text="发布推广" to="Publish" navigation={navigation}></NavigateButton>
                     </>}
                 </View>

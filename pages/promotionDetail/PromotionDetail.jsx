@@ -42,7 +42,17 @@ const PromotionDetail = ({ route }) => {
     const [modalImage, _setModalImage] = useState({ img: [], index: [] });
     useEffect(() => {
         api.getPromotion(promotionId).then(res => {
-            const promotion = res.promotion;
+            const promotion = {
+                id: res.promotion.id,
+                merchantId: res.promotion.merchantId,
+                createTime: res.promotion.createTime,
+                imgs: res.promotion.imgs,
+                isTop: res.promotion.isTop,
+                commentNum: res.promotion.commentNum,
+                likeNum: res.promotion.likeNum,
+                text: res.promotion.text,
+                like: res.promotion.like,
+            }
             setPromotion(promotion);
         })
         api.getUser(merchantId).then(res => {
@@ -53,9 +63,10 @@ const PromotionDetail = ({ route }) => {
             const resComments = res.comments;
             const comments = resComments.map(item => ({
                 id: item.id,
-                createTime: item.create_time,
+                createTime: item.createTime,
                 text: item.text,
-                userId: item.user_id,
+                userId: item.userId,
+                merchantId: item.merchantId,
             }))
             setComments(comments)
         })
@@ -81,11 +92,33 @@ const PromotionDetail = ({ route }) => {
         const res = await api.sendComment(text, promotion.id);
         const comment = {
             id: res.comment.id,
-            createTime: res.comment.create_time,
+            createTime: res.comment.createTime,
             text: res.comment.text,
-            userId: res.comment.user_id,
+            userId: res.comment.userId,
         };
-        setComments([...comments, comment])
+        setComments([comment, ...comments])
+    }
+    const handleLike = async () => {
+        const res = await api.likePromotion(promotionId);
+        console.log(res.success)
+        if (res.success == true) {
+            setPromotion({
+                ...promotion,
+                likeNum: promotion.likeNum + 1,
+                like: true
+            })
+        }
+    }
+    const handleLikeCancel = async () => {
+        const res = await api.likeCancelPromotion(promotionId);
+        console.log(res.success)
+        if (res.success == true) {
+            setPromotion({
+                ...promotion,
+                likeNum: promotion.likeNum - 1,
+                like: false,
+            })
+        }
     }
     return (
         <ScrollView>
@@ -131,10 +164,18 @@ const PromotionDetail = ({ route }) => {
                         )
                         )}
                     </View>
-                    <View style={tw`flex-row bg-white`}>
+                    <View style={tw`flex-row bg-white justify-between p-1 items-center`}>
+                        <View style={tw`justify-between`}>
+                            <Text style={tw`text-lg`}>{promotion.likeNum}人点赞</Text>
+                            <Text style={tw`text-lg`}>发布于{promotion.createTime}</Text>
+                        </View>
                         <View>
-                            <Text style={tw`text-lg`}>{promotion.uv}人浏览,{promotion.like}人点赞</Text>
-                            <Text style={tw`text-lg`}>发布于{promotion.create_time}</Text>
+                            {promotion.like == false && <Pressable onPress={handleLike} style={tw`p-2 rounded-lg border-2 border-gray-300 bg-yellow-400`}>
+                                <Text style={tw`text-xl font-bold text-white text-center`}>点赞</Text>
+                            </Pressable>}
+                            {promotion.like == true && <Pressable onPress={handleLikeCancel} style={tw`p-2 rounded-lg border-2 border-gray-300`}>
+                                <Text style={tw`text-lg text-black text-center`}>取消点赞</Text>
+                            </Pressable>}
                         </View>
                     </View>
                     <View style={tw`bg-white`}>

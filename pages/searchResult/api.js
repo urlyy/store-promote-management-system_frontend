@@ -1,8 +1,12 @@
 import request from "../../utils/request";
 
 const api = {
-    getRecommendPromotions: async () => {
-        const res = await request.get("/promotion/recommend");
+    getRecommendPromotions: async (keyword, category, pageNum, order, longitude, latitude) => {
+        const res = await request.get("/promotion/recommend", { page_num: pageNum, keyword: keyword, category: category, order: order, longitude: longitude, latitude: latitude, category: category, keyword: keyword });
+        return res.data.data;
+    },
+    getUsers: async (keyword) => {
+        const res = await request.get("/user/list", { keyword: keyword });
         return res.data.data;
     },
     getUser: async (userId) => {

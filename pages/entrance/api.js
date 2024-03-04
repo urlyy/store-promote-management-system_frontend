@@ -7,6 +7,14 @@ const api = {
         formData.append("password", password)
         const resp = await request.postForm("/user/login", formData);
         return resp.data.data;
+    },
+    register: async (username, password, gender) => {
+        const formData = new FormData();
+        formData.append("username", username);
+        formData.append("password", password);
+        formData.append("gender", gender);
+        const resp = await request.postForm("/user/register", formData);
+        return resp.data;
     }
 }
 

@@ -1,10 +1,11 @@
-import { View, Image, Text, TextInput, Pressable, Modal } from "react-native"
+import { View, Image, Text, TextInput, Pressable, Modal, Alert } from "react-native"
 import tw from 'twrnc';
 import { useNavigation } from '@react-navigation/native';
 import { useState } from "react";
 import api from './api'
 import userStore from '../../stores/user'
 import localStorage from '../../utils/localStorage'
+import Loading from "../../components/Loading";
 
 const Login = ({ onChangeRoute }) => {
     const [username, setUsername] = useState('');
@@ -12,16 +13,25 @@ const Login = ({ onChangeRoute }) => {
     const setUser = userStore(state => state.setUser);
     const submit = async () => {
         if (username == "" || pass == "") {
+            Alert.alert(
+                '提示',
+                '用户名和密码不能为空',
+                [
+                    {
+                        text: '确定', onPress: () => { }
+                    }
+                ],
+                { cancelable: false }
+            );
             return;
         }
         const res = await api.login(username, pass);
+        console.log(res.user);
         const user = res.user;
         const token = res.token;
         user.token = token;
         localStorage.set("user", JSON.stringify(user));
         setUser(user);
-        // console.log("跳转了")
-        // navigation.navigate("Home");
     }
     return (
         <View style={tw`flex-1 p-2 gap-1`}>
@@ -42,17 +52,72 @@ const Login = ({ onChangeRoute }) => {
 const Register = ({ onChangeRoute }) => {
     const [username, setUsername] = useState('');
     const [pass, setPass] = useState('');
-    const submit = () => {
-        if (username == "" || pass == "") {
+    const [gender, setGender] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const submit = async () => {
+        if (username == "" || pass == "" || gender == null) {
+            Alert.alert(
+                '提示',
+                '信息不能为空',
+                [
+                    {
+                        text: '确定', onPress: () => { }
+                    }
+                ],
+                { cancelable: false }
+            );
             return;
+        } else {
+            setLoading(true);
+            const res = await api.register(username, pass, gender);
+            if (res.success) {
+                setUsername("");
+                setPass("");
+                setGender(null);
+                setLoading(false);
+                Alert.alert(
+                    '注册成功',
+                    '请登录',
+                    [
+                        {
+                            text: '前往登录', onPress: () => {
+                                onChangeRoute("login")
+                            }
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            } else {
+                setLoading(false);
+                Alert.alert(
+                    '注册失败',
+                    res.message,
+                    [
+                        {
+                            text: '确定', onPress: () => { }
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
     }
     return (
         <View style={tw`flex-1 p-2 gap-1`}>
+            <Loading visible={loading} />
             <Text style={tw`text-xl text-black`}>输入用户名</Text>
-            <TextInput style={tw`border rounded-lg text-xl`} placeholder=""></TextInput>
+            <TextInput value={username} onChangeText={text => setUsername(text)} style={tw`border rounded-lg text-xl`} placeholder=""></TextInput>
             <Text style={tw`text-xl text-black`}>输入密码</Text>
-            <TextInput secureTextEntry={true} style={tw`border rounded-lg text-xl`} placeholder=""></TextInput>
+            <TextInput value={pass} onChangeText={text => setPass(text)} secureTextEntry={true} style={tw`border rounded-lg text-xl`} placeholder=""></TextInput>
+            <Text style={tw`text-xl text-black`}>确认性别</Text>
+            <View style={tw`flex-row justify-around gap-3`}>
+                <Pressable onPress={setGender.bind(null, false)} style={tw`${gender == false ? 'bg-blue-300' : ""} border border-black rounded-md flex-1 p-2`}>
+                    <Text style={tw`${gender == false ? 'text-white' : "text-black"} text-center text-lg  font-bold`}>男</Text>
+                </Pressable>
+                <Pressable onPress={setGender.bind(null, true)} style={tw`${gender == true ? 'bg-red-300' : ""}  border border-black rounded-md flex-1 p-2`}>
+                    <Text style={tw`${gender == true ? 'text-white' : "text-black"} text-center text-lg  font-bold`}>女</Text>
+                </Pressable>
+            </View>
             <Pressable onPress={submit} style={tw`rounded-lg border border-black mt-3 bg-green-500`}>
                 <Text style={tw`text-2xl text-center text-white p-2`}>提交注册信息</Text>
             </Pressable>
@@ -62,6 +127,8 @@ const Register = ({ onChangeRoute }) => {
         </View>
     )
 }
+
+
 
 const Entrance = ({ }) => {
     // const navigation = useNavigation();

@@ -2,6 +2,9 @@
 import axios from "axios";
 import localStorage from './localStorage'
 import env from '../env'
+
+console.log(env.API_BACKEND_URL)
+
 //2、创建axios的实例
 let instance = axios.create({
     baseURL: env.API_BACKEND_URL,

@@ -1,8 +1,8 @@
 import request from "../../utils/request";
 
 const api = {
-    getRecommendPromotions: async () => {
-        const res = await request.get("/promotion/recommend");
+    getRecommendPromotions: async (latitude, longitude, pageNum) => {
+        const res = await request.get("/promotion/recommend", { page_num: pageNum, latitude: latitude, longitude: longitude });
         return res.data.data;
     },
     getUser: async (userId) => {

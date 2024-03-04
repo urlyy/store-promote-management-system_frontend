@@ -14,6 +14,7 @@ const api = {
         return res.data.data;
     },
     sendComment: async (text, promotionId) => {
+        console.log(promotionId, text);
         const formData = new FormData();
         formData.append("text", text);
         const res = await request.postForm(`/promotion/${promotionId}/comment`, formData);
@@ -22,7 +23,16 @@ const api = {
     getComments: async (promotionId) => {
         const res = await request.get(`/promotion/${promotionId}/comment`);
         return res.data.data;
-    }
+    },
+    likePromotion: async (promotionId) => {
+        const res = await request.postParam(`/promotion/${promotionId}/like`);
+        return res.data;
+    },
+    likeCancelPromotion: async (promotionId) => {
+        const res = await request.postParam(`/promotion/${promotionId}/like_cancel`);
+        return res.data;
+    },
+
 }
 
 export default api;

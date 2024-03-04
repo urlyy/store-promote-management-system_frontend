@@ -1,10 +1,9 @@
 import request from "../../utils/request";
 
 const api = {
-    beMerchant: async () => {
+    beMerchant: async (latitude, longitude) => {
         const url = "/merchant"
-        const res = await request.postParam(url);
-        console.log(res.data)
+        const res = await request.postParam(url, { latitude: latitude, longitude: longitude });
         return res.data;
     },
     changeAvatar: async (file) => {

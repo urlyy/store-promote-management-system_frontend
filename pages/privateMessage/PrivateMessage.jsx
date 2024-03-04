@@ -8,6 +8,7 @@ import userStore from "../../stores/user";
 import dateFormat from "../../utils/dateFormat";
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ImageViewer from 'react-native-image-zoom-viewer';
+import Loading from "../../components/Loading";
 
 const MessageItem = ({ msg, sender, alignLeft, onPressImg }) => {
     const [width, setWidth] = useState(0);
@@ -26,13 +27,13 @@ const MessageItem = ({ msg, sender, alignLeft, onPressImg }) => {
     return (
         <>
             <View style={tw`items-center`}>
-                <Text>{dateFormat(msg.create_time)}</Text>
+                <Text>{dateFormat(msg.createTime)}</Text>
             </View>
             <View style={tw`${alignLeft ? "flex-row" : "flex-row-reverse"} gap-2`}>
                 <Image style={tw`rounded-full w-15 h-15`} source={{ uri: sender.avatar }}></Image>
                 <View style={tw`flex-1 ${alignLeft ? "items-start" : "items-end"}`}>
                     {msg.text != "" && <Text style={tw`text-xl bg-white rounded-lg p-1 max-w-full`}> {msg.text}</Text>}
-                    {msg.text == "" && msg.img != "" && (
+                    {msg.text == "" && msg && msg.img != "" && (
                         <Pressable onPress={() => onPressImg(msg.img)} style={tw`w-[${width}px] h-[${height}px]`}>
                             <Image style={tw`w-full h-full`} source={{ uri: msg.img }}></Image>
                         </Pressable>)}
@@ -45,40 +46,28 @@ const MessageItem = ({ msg, sender, alignLeft, onPressImg }) => {
 
 const PrivateMessage = ({ route }) => {
     const { userId } = route.params;
-    const { username, coin, avatar, brief, id, role } = userStore();
+    const { username, avatar, brief, id, role } = userStore();
     const [thisGuy, setThisGuy] = useState({});
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");
     const [modalImage, _setModalImage] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
+
+    const handleGetMessages = () => {
+        setLoading(true);
+        api.getMessages(userId).then(res => {
+            const msgs = res.msgs;
+            setMessages(msgs);
+            setLoading(false);
+        })
+    }
     useEffect(() => {
         api.getUser(userId).then(res => {
             const guy = res.user;
             setThisGuy(guy);
+            handleGetMessages();
         })
-        api.getMessages(userId).then(res => {
-            const msgs = res.msgs;
-            setMessages(msgs);
-        })
-        // const datum = {
-        //     avatar: "",
-        //     text: "123412341234",
-        //     image: "",
-        //     userId: 1,
-        // }
-        // const datum1 = {
-        //     avatar: "",
-        //     text: "哈哈哈哈",
-        //     image: "",
-        //     userId: 2,
-        // }
-        // const datum2 = {
-        //     avatar: "",
-        //     text: "",
-        //     image: "12341234",
-        //     userId: 2,
-        // }
-        // setMessages([datum, datum1, datum2]);
     }, [])
     const setModalImage = (img) => {
         _setModalImage(img);
@@ -127,12 +116,13 @@ const PrivateMessage = ({ route }) => {
     }
     return (
         <View style={tw`w-100 h-full`}>
+            <Loading visible={loading} />
             <View style={tw`w-full bg-white justify-center pb-2 pt-2 flex-row items-center`}>
                 <Pressable onPress={() => navigation.navigate("Profile", { userId: userId })} style={tw`absolute left-0`}>
                     <Text style={tw`text-2xl pl-1`}>{"<"}返回</Text>
                 </Pressable>
                 <Text style={tw`text-3xl text-black mx-auto`}>{thisGuy.username}</Text>
-                <Pressable style={tw`absolute right-0`}>
+                <Pressable onPress={handleGetMessages} style={tw`absolute right-0`}>
                     <Text style={tw`text-2xl pr-1`}>刷新</Text>
                 </Pressable>
             </View>
@@ -141,7 +131,7 @@ const PrivateMessage = ({ route }) => {
             </Modal>
             <ScrollView style={tw`flex-1 p-2`}>
                 {messages.map((item, idx) => {
-                    return (<MessageItem onPressImg={setModalImage} key={idx} alignLeft={item.sender_id != id} msg={item} sender={item.sender_id == id ? getMe() : thisGuy}></MessageItem>)
+                    return (<MessageItem onPressImg={setModalImage} key={idx} alignLeft={item.senderId != id} msg={item} sender={item.senderId == id ? getMe() : thisGuy}></MessageItem>)
                 })}
             </ScrollView>
             <View style={tw`bg-white p-2 flex-row gap-1 items-end min-h-1`}>

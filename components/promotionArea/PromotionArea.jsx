@@ -1,11 +1,12 @@
-import { View, Image, Text, TextInput, StyleSheet, Modal, Pressable, ScrollView } from "react-native"
+import { View, Image, Text, RefreshControl, Pressable } from "react-native"
 import tw from 'twrnc';
 import { useNavigation } from '@react-navigation/native';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import ImageViewer from 'react-native-image-zoom-viewer';
 import api from './api'
 import ImageGroup from "../ImageGroup";
 import { CommentIcon } from "../Icons";
+import MyScrollView from "../MyScrollView";
 
 
 const Comment = ({ comment }) => {
@@ -18,8 +19,8 @@ const Comment = ({ comment }) => {
     }, [])
     return (
         <View style={tw`flex-row`}>
-            <Text style={tw`text-blue-500`}>{user.username}</Text>
-            <Text>:{comment.text}</Text>
+            <Text style={tw`text-blue-500 w-15`}>{user.username}</Text>
+            <Text style={tw`flex-1`}>:{comment.text}</Text>
         </View>
     )
 }
@@ -27,12 +28,12 @@ const Comment = ({ comment }) => {
 const PromotionItem = ({ commentInputActive, promotion, onShowCommentInput, onCloseCommentInput }) => {
     const navigation = useNavigation();
     const [modalImage, _setModalImage] = useState({ imgs: [], index: 0 });
-    const [commentInput, setCommentInput] = useState("");
+    // const [commentInput, setCommentInput] = useState("");
     const [merchant, setMerchant] = useState({});
     const [comments, setComments] = useState([]);
     const [showAllComment, setShowAllComment] = useState(false);
     useEffect(() => {
-        api.getUser(promotion.user_id).then(res => {
+        api.getUser(promotion.merchantId).then(res => {
             const merchant = res.user;
             setMerchant({
                 id: merchant.id,
@@ -44,9 +45,10 @@ const PromotionItem = ({ commentInputActive, promotion, onShowCommentInput, onCl
             const resComments = res.comments;
             const comments = resComments.map(item => ({
                 id: item.id,
-                createTime: item.create_time,
+                createTime: item.createTime,
                 text: item.text,
-                userId: item.user_id,
+                userId: item.userId,
+                merchantId: item.merchantId,
             }))
             setComments(comments)
         })
@@ -61,22 +63,23 @@ const PromotionItem = ({ commentInputActive, promotion, onShowCommentInput, onCl
         // });
         // inited.current = true
     }, []);
-    const sendComment = async () => {
-        if (commentInput == "") {
-            return;
-        }
-        const text = commentInput;
-        setCommentInput("");
-        onCloseCommentInput();
-        const res = await api.sendComment(text, promotion.id);
-        const comment = {
-            id: res.comment.id,
-            createTime: res.comment.createTime,
-            text: res.comment.text,
-            userId: res.comment.user_id,
-        };
-        setComments([...comments, comment])
-    }
+    // const sendComment = async () => {
+    //     if (commentInput == "") {
+    //         return;
+    //     }
+    //     const text = commentInput;
+    //     setCommentInput("");
+    //     onCloseCommentInput();
+    //     const res = await api.sendComment(text, promotion.id);
+    //     const comment = {
+    //         id: res.comment.id,
+    //         createTime: res.comment.createTime,
+    //         text: res.comment.text,
+    //         userId: res.comment.userId,
+    //         merchantId: item.merchantId,
+    //     };
+    //     setComments([...comments, comment])
+    // }
     return (
         <View style={tw`flex-row gap-1 rounded-sm p-1 border-b-[#f7f7f7] border-b-4 `}>
             <View style={tw`items-center`}>
@@ -93,19 +96,22 @@ const PromotionItem = ({ commentInputActive, promotion, onShowCommentInput, onCl
                 <ImageGroup imgs={promotion.imgs} onlyOneRow={true}></ImageGroup>
                 <View style={tw`flex-row`}>
                     <View>
-                        <Text>{promotion.uv}人浏览,{promotion.like}人点赞</Text>
-                        <Text>发布于{promotion.create_time}</Text>
+                        <Text>{promotion.likeNum}人点赞,{promotion.commentNum}条评论</Text>
+                        <Text>发布于{promotion.createTime}</Text>
                     </View>
-                    <View style={tw`flex-1 items-end justify-center`}>
+                    {/* <View style={tw`flex-1 items-end justify-center`}>
                         {commentInputActive == false &&
                             <CommentIcon onPress={() => { setCommentInput(""); onShowCommentInput() }} fill={true}></CommentIcon>
                         }
                         {commentInputActive &&
                             <CommentIcon onPress={() => { setCommentInput(""); onCloseCommentInput() }}></CommentIcon>
                         }
-                    </View>
+                    </View> */}
                 </View>
-
+                {/* {commentInputActive && <View style={tw`flex-row gap-1`}>
+                    <TextInput value={commentInput} onChangeText={text => setCommentInput(text)} multiline={true} style={tw`text-base flex-1 border border-gray-300 rounded-md`} placeholder="输入评论"></TextInput>
+                    <Pressable onPress={() => { sendComment() }} style={tw`border-gray-300 border rounded-md w-13 justify-center items-center`}><Text style={tw`text-base`}>发送</Text></Pressable>
+                </View>} */}
                 <View style={tw`bg-[#f7f7f7] p-1 rounded-md`}>
                     {comments.filter((_, idx) => { return showAllComment ? true : idx < 4 }).map((comment, idx) => (
                         <Comment key={idx} comment={comment}></Comment>
@@ -118,44 +124,23 @@ const PromotionItem = ({ commentInputActive, promotion, onShowCommentInput, onCl
                     )
                     }
                 </View>
-                {commentInputActive && <View style={tw`flex-row gap-1`}>
-                    <TextInput value={commentInput} onChangeText={text => setCommentInput(text)} multiline={true} style={tw`text-base flex-1 border border-gray-300 rounded-md`} placeholder="输入评论"></TextInput>
-                    <Pressable onPress={() => { sendComment() }} style={tw`border-gray-300 border rounded-md w-13 justify-center items-center`}><Text style={tw`text-base`}>发送</Text></Pressable>
-                </View>}
             </View>
         </View >
     )
 }
 
-
-// Promotion:["id", "create_time", "is_deleted", "user_id", "text", "imgs", "status", "is_top"]
-// User:["id", "username", "brief", "avatar", "coin", "role", "location", "follow"]
-const PromotionArea = ({ promotions }) => {
+const PromotionArea = ({ promotions, onBottomRefresh }) => {
     const [showCommentInputIdx, setShowCommentInputIdx] = useState(-1);
-    // const id2user = useRef({});
-    useEffect(() => {
-        // if (promotions.length != 0) {
-        //     const userIds = new Set();
-        //     promotions.forEach(item => {
-        //         userIds.add(item.user_id);
-        //     })
-        //     // 不重复的获得各user信息
-        //     const promises = [...userIds].map(id => api.getUser(id));
-        //     Promise.all(promises).then(resList => {
-        //         resList.forEach((resp, index) => {
-        //             const thisGuy = resp.user;
-        //             id2user.current[thisGuy.id] = thisGuy;
-        //         });
-        //         // console.log(id2user.current)
-        //     })
-        // }
-    }, [promotions])
+
     return (
-        <ScrollView style={tw`flex-1 p-1`}>
+        <MyScrollView
+            onBottomRefresh={onBottomRefresh}
+            style={tw`flex-1 p-1`}>
             <View style={tw`gap-2 bg-white`}>
-                {promotions.map((datum, idx) => <PromotionItem key={idx} promotion={datum} commentInputActive={idx == showCommentInputIdx} onShowCommentInput={setShowCommentInputIdx.bind(null, idx)} onCloseCommentInput={setShowCommentInputIdx.bind(null, -1)}></PromotionItem>)}
+                {promotions && promotions.length > 0 && promotions.map((datum, idx) => <PromotionItem key={idx} promotion={datum} commentInputActive={idx == showCommentInputIdx} onShowCommentInput={setShowCommentInputIdx.bind(null, idx)} onCloseCommentInput={setShowCommentInputIdx.bind(null, -1)}></PromotionItem>)}
+                {!promotions || promotions.length == 0 && <Text style={tw`text-center bg-white text-xl p-1`}>暂无推广</Text>}
             </View>
-        </ScrollView>
+        </MyScrollView>
     )
 }
 
