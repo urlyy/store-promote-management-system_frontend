@@ -26,12 +26,25 @@ const Login = ({ onChangeRoute }) => {
             return;
         }
         const res = await api.login(username, pass);
-        console.log(res.user);
-        const user = res.user;
-        const token = res.token;
-        user.token = token;
-        localStorage.set("user", JSON.stringify(user));
-        setUser(user);
+        if (res.success) {
+            const user = res.data.user;
+            const token = res.data.token;
+            user.token = token;
+            localStorage.set("user", JSON.stringify(user));
+            setUser(user);
+        } else {
+            Alert.alert(
+                '提示',
+                res.message,
+                [
+                    {
+                        text: '确定', onPress: () => { }
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
     }
     return (
         <View style={tw`flex-1 p-2 gap-1`}>

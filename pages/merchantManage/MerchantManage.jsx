@@ -10,6 +10,7 @@ import ImageGroup from '../../components/ImageGroup';
 import { merchantCategories } from '../../data'
 import DropDownPicker from 'react-native-dropdown-picker';
 import locator from '../../utils/getLocation';
+import MyScrollView from '../../components/MyScrollView';
 
 const MerchantManage = () => {
     const [promotions, setPromotions] = useState([]);
@@ -20,25 +21,25 @@ const MerchantManage = () => {
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
     const [categories, setCategories] = useState(merchantCategories.map(item => ({ label: item, value: item })));
     const [category, setCategory] = useState(myCategory);
+    const [promotionPageNum, setPromotionPageNum] = useState(1);
+
+    const handleGetPromotions = () => {
+        api.getPromotions(promotionPageNum).then((res) => {
+            const newPromotions = res.promotions;
+            setPromotions(prevPromotions => [...prevPromotions, ...newPromotions]);
+            const noMore = res.noMore;
+            if (noMore != true) {
+                setPromotionPageNum(prev => prev + 1);
+            }
+        });
+    }
     useEffect(() => {
         const [latitude, longitude] = location;
-        console.log(location);
         locator.getCityByLocation(latitude, longitude).then(addr => {
             setCurAddress(addr);
         })
-        api.getPromotions(id).then((res) => {
-            const p = res.promotions;
-            setPromotions(p.map(item => ({
-                id: item.id,
-                merchantId: item.merchantId,
-                createTime: item.createTime,
-                imgs: item.imgs,
-                isTop: item.isTop,
-                commentNum: item.commentNum,
-                likeNum: item.likeNum,
-                text: item.text,
-            })));
-        });
+        handleGetPromotions();
+
     }, [])
     const handleDelete = (idx) => {
         Alert.alert(
@@ -59,13 +60,21 @@ const MerchantManage = () => {
         );
     }
     const handleEdit = (idx) => {
-        console.log(promotions[idx].id)
         navigation.navigate("Publish", { promotionId: promotions[idx].id });
     }
     const handleChangeCategory = async (newCategory) => {
         const res = await api.changeCategory(newCategory);
         if (res.success == true) {
             setMyCategory(newCategory);
+        }
+    }
+    const status2text = (status) => {
+        if (status == 0) {
+            return "待审核"
+        } else if (status == 1) {
+            return "审核通过"
+        } else {
+            return "审核不通过"
         }
     }
     return (
@@ -99,9 +108,9 @@ const MerchantManage = () => {
                     </View>
                 </View>
             </View>
-            <View>
+            <View style={tw`flex-1`}>
                 <Text style={tw`text-black text-2xl border-b-4 border-b-[#f7f7f7] p-1`}>推广管理</Text>
-                <ScrollView>
+                <MyScrollView onBottomRefresh={handleGetPromotions}>
                     {promotions.length == 0 ? (<View style={tw` items-center w-full`}><Text style={tw`flex text-black text-2xl`}>暂无推广</Text></View>) :
                         (
                             promotions.map((item, idx) => (
@@ -113,6 +122,7 @@ const MerchantManage = () => {
                                         <ImageGroup imgs={item.imgs} onlyOneRow={true}></ImageGroup>
                                         <View style={tw`flex-row`}>
                                             <View>
+                                                <Text >状态:{status2text(item.status)}</Text>
                                                 <Text>{item.likeNum}人点赞</Text>
                                                 <Text>发布于{item.createTime}</Text>
                                             </View>
@@ -127,7 +137,7 @@ const MerchantManage = () => {
                             ))
                         )
                     }
-                </ScrollView>
+                </MyScrollView>
             </View>
         </View>
     )

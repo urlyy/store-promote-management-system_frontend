@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import localStorage from '../utils/localStorage'
-import { ComposedGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/gestureComposition';
 
 let user = null;
 
@@ -25,7 +24,7 @@ const userStore = create(set => ({
     commentNum: user ? user.commentNum : null,
     fanNum: user ? user.fanNum : null,
     category: user ? user.category : null,
-
+    unread: 0,
     logout: () => set(state => ({
         token: null,
         id: null,
@@ -77,8 +76,8 @@ const userStore = create(set => ({
     }),
     setAvatar: (avatar) => set(prev => ({ ...prev, avatar: avatar })),
     setCategory: (category) => set(prev => ({ ...prev, category: category })),
-    setLocation: (latitude, longitude) => set(prev => ({ ...prev, location: [latitude, longitude] }))
-
+    setLocation: (latitude, longitude) => set(prev => ({ ...prev, location: [latitude, longitude] })),
+    setUnread: (count) => set(prev => ({ ...prev, unread: count })),
 }))
 
 export default userStore;

@@ -1,8 +1,8 @@
 import request from "../../utils/request";
 
 const api = {
-    getPromotions: async (userId) => {
-        const res = await request.get(`/promotion/user/${userId}`);
+    getPromotions: async (pageNum) => {
+        const res = await request.get(`/promotion/merchant/all`, { page_num: pageNum });
         return res.data.data;
     },
     changeCategory: async (category) => {
