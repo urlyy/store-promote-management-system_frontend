@@ -3,13 +3,13 @@ import tw from 'twrnc';
 import { useEffect, useState, useRef } from "react";
 import { useNavigation } from '@react-navigation/native';
 import userStore from "../../stores/user";
-import localStorage from '../../utils/localStorage'
+// import localStorage from '../../utils/localStorage'
 
 const AccountManage = () => {
     const navigation = useNavigation();
     const _logout = userStore(state => state.logout);
     const logout = () => {
-        localStorage.delete("user");
+        // localStorage.delete("user");
         _logout();
         // navigation.navigate("Entrance");
     }

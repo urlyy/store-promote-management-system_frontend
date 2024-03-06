@@ -35,6 +35,7 @@ import FollowPromotion from './pages/followPromotion/FollowPromotion';
 import locator from './utils/getLocation'
 import Toast from 'react-native-toast-message';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createStackNavigator();
 const App = () => {
@@ -49,6 +50,7 @@ const App = () => {
       await getLocation();
       setInterval(getLocation, 20 * 1000);
     });
+    AsyncStorage.setItem('token', token);
   }, [])
   return (
     <View style={tw`flex-1`}>

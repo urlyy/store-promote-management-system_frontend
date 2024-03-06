@@ -4,7 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useState } from "react";
 import api from './api'
 import userStore from '../../stores/user'
-import localStorage from '../../utils/localStorage'
+// import localStorage from '../../utils/localStorage'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loading from "../../components/Loading";
 
 const Login = ({ onChangeRoute }) => {
@@ -26,11 +27,13 @@ const Login = ({ onChangeRoute }) => {
             return;
         }
         const res = await api.login(username, pass);
+        // return;
         if (res.success) {
             const user = res.data.user;
             const token = res.data.token;
             user.token = token;
-            localStorage.set("user", JSON.stringify(user));
+            AsyncStorage.setItem('token', token);
+            // localStorage.set("user", JSON.stringify(user));
             setUser(user);
         } else {
             Alert.alert(

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigation } from '@react-navigation/native';
 import userStore from '../../stores/user'
 import api from './api'
-import localStorage from '../../utils/localStorage'
+// import localStorage from '../../utils/localStorage'
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { MaleIcon, FemaleIcon } from '../../components/Icons'
 import Loading from "../../components/Loading";
@@ -38,12 +38,12 @@ const Profile = () => {
         if (res.success == true) {
             const tmpCategory = res.data.category;
             setMerchant(latitude, longitude, tmpCategory);
-            const userStr = localStorage.getString("user");
-            const user = JSON.parse(userStr);
-            user.role = 1;
-            user.location = [latitude, longitude];
-            user.category = category;
-            localStorage.set("user", JSON.stringify(user));
+            // const userStr = localStorage.getString("user");
+            // const user = JSON.parse(userStr);
+            // user.role = 1;
+            // user.location = [latitude, longitude];
+            // user.category = category;
+            // localStorage.set("user", JSON.stringify(user));
             setLoading(false);
             Alert.alert(
                 '操作提示',
@@ -80,12 +80,11 @@ const Profile = () => {
         const res = await api.changeAvatar(file);
         const avatar = res.avatar;
         setAvatar(avatar);
-        console.log(avatar);
-        const userStr = localStorage.getString("user");
-        const user = JSON.parse(userStr);
-        user.avatar = avatar;
-
-        localStorage.set("user", JSON.stringify(user));
+        // console.log(avatar);
+        // const userStr = localStorage.getString("user");
+        // const user = JSON.parse(userStr);
+        // user.avatar = avatar;
+        // localStorage.set("user", JSON.stringify(user));
     }
     const handleChangeAvatar = async () => {
         const options = {}

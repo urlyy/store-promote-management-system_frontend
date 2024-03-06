@@ -2,7 +2,7 @@ import api from "./api";
 import tw from 'twrnc'
 import { View, Text, Pressable, TextInput, Alert } from "react-native";
 import userStore from "../../stores/user";
-import localStorage from '../../utils/localStorage'
+// import localStorage from '../../utils/localStorage'
 import { useState } from "react";
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
@@ -14,7 +14,7 @@ const EditProfile = () => {
     const [age, setAge] = useState(uage);
     const [gender, setGender] = useState(ugender);
     const navigation = useNavigation();
-    const setUser = userStore(state => state.setUser);
+    const setProfile = userStore(state => state.setProfile);
     const submit = async () => {
         if (username == "" || brief == "") {
             return;
@@ -41,14 +41,19 @@ const EditProfile = () => {
                     [
                         {
                             text: '确定', onPress: () => {
-                                const preUser = JSON.parse(localStorage.getString("user"));
-                                preUser.username = username;
-                                preUser.age = age;
-                                preUser.gender = gender;
-                                preUser.brief = brief;
-                                localStorage.set("user", JSON.stringify(preUser));
-                                setUser(preUser);
-
+                                setProfile({
+                                    username: username,
+                                    age: age,
+                                    gender: gender,
+                                    brief: brief,
+                                })
+                                // const preUser = JSON.parse(localStorage.getString("user"));
+                                // preUser.username = username;
+                                // preUser.age = age;
+                                // preUser.gender = gender;
+                                // preUser.brief = brief;
+                                // localStorage.set("user", JSON.stringify(preUser));
+                                // setUser(preUser);
                                 navigation.navigate("Mine");
                             }
                         }

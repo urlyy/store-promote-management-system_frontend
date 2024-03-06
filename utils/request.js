@@ -1,9 +1,13 @@
 //1、引入axios
 import axios from "axios";
-import localStorage from './localStorage'
+// import localStorage from './localStorage'
 import env from '../env'
+import userStore from "../stores/user";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-console.log(env.API_BACKEND_URL)
+
+
+
 
 //2、创建axios的实例
 let instance = axios.create({
@@ -11,14 +15,21 @@ let instance = axios.create({
     withCredentials: false,
 });
 
+
+
 //3、axios的拦截--request
 instance.interceptors.request.use(
-    (config) => {
-        const userStr = localStorage.getString("user");
-        if (userStr != null) {
-            const user = JSON.parse(userStr);
-            config.headers.Authorization = user.token;
+    async (config) => {
+        // 获取数据
+        const token = await AsyncStorage.getItem('token');
+        if (token != null) {
+            config.headers.Authorization = token;
         }
+        // const userStr = localStorage.getString("user");
+        // if (userStr != null) {
+        //     const user = JSON.parse(userStr);
+        //     config.headers.Authorization = user.token;
+        // }
         return config;
     },
     (err) => {

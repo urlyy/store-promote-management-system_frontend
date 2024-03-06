@@ -1,12 +1,12 @@
 import { create } from 'zustand'
-import localStorage from '../utils/localStorage'
+// import localStorage from '../utils/localStorage'
 
 let user = null;
 
-const userStr = localStorage.getString("user");
-if (userStr) {
-    user = JSON.parse(userStr);
-}
+// const userStr = localStorage.getString("user");
+// if (userStr) {
+//     user = JSON.parse(userStr);
+// }
 
 const userStore = create(set => ({
     token: user ? user.token : null,
@@ -78,6 +78,7 @@ const userStore = create(set => ({
     setCategory: (category) => set(prev => ({ ...prev, category: category })),
     setLocation: (latitude, longitude) => set(prev => ({ ...prev, location: [latitude, longitude] })),
     setUnread: (count) => set(prev => ({ ...prev, unread: count })),
+    setProfile: (newProfile) => set(prev => ({ ...prev, ...newProfile }))
 }))
 
 export default userStore;

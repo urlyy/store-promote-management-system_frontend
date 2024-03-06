@@ -2,7 +2,7 @@ import api from "./api";
 import tw from 'twrnc'
 import { View, Text, Pressable, TextInput, Alert } from "react-native";
 import userStore from "../../stores/user";
-import localStorage from '../../utils/localStorage'
+// import localStorage from '../../utils/localStorage'
 import { useState } from "react";
 
 const UpdatePassword = () => {
@@ -21,7 +21,7 @@ const UpdatePassword = () => {
                 [
                     {
                         text: '重新登录', onPress: () => {
-                            localStorage.delete("user");
+                            // localStorage.delete("user");
                             _logout();
                         }
                     }
