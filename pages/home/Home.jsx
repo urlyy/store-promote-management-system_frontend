@@ -40,7 +40,7 @@ const Main = ({ navigation }) => {
     return (
         <>
             <View style={tw`h-32`}>
-                <ImageBackground style={tw`flex-1 h-full`} source={require('./bg.png')} resizeMode="cover">
+                <ImageBackground style={tw`w-full h-full`} source={require('./bg.png')} resizeMode="cover">
                     <TopSearch keyword={searchKeyword} onChangeText={text => setSearchKeyword(text)}></TopSearch>
                 </ImageBackground>
             </View>
