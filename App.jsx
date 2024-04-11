@@ -74,7 +74,6 @@ const App = () => {
               <Stack.Screen name="MerchantManage" component={MerchantManage} />
               <Stack.Screen name="AccountManage" component={AccountManage} />
               <Stack.Screen name="MerchantPosition" component={MerchantPosition} />
-
             </Stack.Navigator>
             <BottomBar></BottomBar>
           </NavigationContainer>

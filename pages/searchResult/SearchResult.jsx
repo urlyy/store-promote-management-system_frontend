@@ -35,11 +35,11 @@ const SearchResult = ({ route }) => {
     ])
     const [searchTypeModalOpen, setSearchTypeModalOpen] = useState(false);
 
-    const handleGetPromotions = async () => {
+    const handleGetPromotions = () => {
         const [latitude, longitude] = currentLocation;
-        api.getRecommendPromotions(keyword, category, promotionsPageNum, order, latitude, longitude).then(res => {
-            const newPromotions = res.promotions;
-            setPromotions(prevPromotions => [...prevPromotions, ...newPromotions]);
+        api.getRecommendPromotions(searchKeyword, category, promotionsPageNum, order, latitude, longitude).then(res => {
+            const newPromotions = res.promotions || [];
+            setPromotions(prev => [...prev, ...newPromotions]);
             const noMore = res.noMore;
             if (noMore != true) {
                 setPromotionsPageNum(prev => prev + 1);
@@ -48,12 +48,22 @@ const SearchResult = ({ route }) => {
         })
     }
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         setLoading(true);
         if (searchType == "推广") {
-            handleGetPromotions();
+            setPromotionsPageNum(1);
+            const [latitude, longitude] = currentLocation;
+            api.getRecommendPromotions(searchKeyword, category, 1, order, latitude, longitude).then(res => {
+                const newPromotions = res.promotions;
+                setPromotions([...newPromotions]);
+                const noMore = res.noMore;
+                if (noMore != true) {
+                    setPromotionsPageNum(prev => prev + 1);
+                }
+                setLoading(false);
+            })
         } else {
-            api.getUsers(keyword).then(res => {
+            api.getUsers(searchKeyword).then(res => {
                 const us = res.users;
                 setUsers(us.map(u => ({
                     userId: u.userId,
